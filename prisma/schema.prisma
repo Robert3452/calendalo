@@ -1,0 +1,140 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum BookingStatus {
+  confirmed
+  cancelled
+}
+
+model Account {
+  id           String         @id @default(uuid())
+  name         String
+  timezone     String         @default("UTC")
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  // Relaciones bookings, availability, policies, book, user
+  users        User[]
+  availability Availability[]
+
+  policy Policy?
+
+  blocks              Block[]
+  bookings            Booking[]
+  calendarIntegration CalendarIntegration?
+
+  @@map("accounts")
+}
+
+model User {
+  id           String @id @default(uuid())
+  email        String @unique
+  passwordHash String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  accountId String
+  account   Account   @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  bookings  Booking[]
+
+  @@index([accountId])
+  @@map("users")
+}
+
+model Policy {
+  id               String @id @default(uuid())
+  minNoticeHours   Int    @default(5)
+  cancelLimitHours Int    @default(24)
+  slotDurationMin  Int    @default(30)
+
+  accountId String  @unique
+  account   Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@map("policies")
+}
+
+model Availability {
+  id        String @id @default(uuid())
+  dayOfWeek Int
+  startTime String // HH:mm
+  endTime   String // HH:mm
+
+  accountId String
+  account   Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([accountId, dayOfWeek])
+  @@map("availability")
+}
+
+model Block {
+  id String @id @default(uuid())
+
+  startTime DateTime
+  endTime   DateTime
+
+  reason    String?
+  createdAt DateTime @default(now())
+
+  accountId String
+  account   Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([accountId, startTime, endTime])
+  @@map("blocks")
+}
+
+model Booking {
+  id String @id @default(uuid())
+
+  startTime DateTime
+  endTime   DateTime
+
+  status BookingStatus @default(confirmed)
+
+  guestEmail    String?
+  guestName     String?
+  googleEventId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  accountId String
+  account   Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([accountId, startTime, endTime])
+  @@index([accountId, status])
+  @@map("bookings")
+}
+
+model CalendarIntegration {
+  id String @id @default(uuid())
+
+  accountId String  @unique
+  account   Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  accessToken  String
+  refreshToken String
+
+  expiryDate DateTime
+  calendarId String   @default("primary")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("calendar_integrations")
+}
