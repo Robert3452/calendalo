@@ -5,8 +5,9 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider     = "prisma-client"
+  output       = "../generated/prisma"
+  moduleFormat = "cjs"
 }
 
 datasource db {
@@ -22,7 +23,7 @@ enum BookingStatus {
 model Account {
   id           String         @id @default(uuid())
   name         String
-  timezone     String         @default("UTC")
+  timezone     String         @default("UTC") @map("timezone")
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
   // Relaciones bookings, availability, policies, book, user
