@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { UpsertPolciyDto } from './dto/create-polciy.dto';
+import { UpsertPolciyDto } from './dto/create-policy.dto';
 
 @Injectable()
-export class PolciiesService {
+export class PoliciesService {
   constructor(private readonly prismaService: PrismaService) {}
 
   async upsert(accountId: string, upsertPolciyDto: UpsertPolciyDto) {

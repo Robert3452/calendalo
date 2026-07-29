@@ -5,5 +5,6 @@ import { BlocksController } from './blocks.controller';
 @Module({
   controllers: [BlocksController],
   providers: [BlocksService],
+  exports: [BlocksService],
 })
 export class BlocksModule {}

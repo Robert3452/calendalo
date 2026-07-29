@@ -7,7 +7,9 @@ import { AuthModule } from './modules/auth/auth.module';
 import { AvailabilityModule } from './modules/availabilities/availabilities.module';
 import { BlocksModule } from './modules/blocks/blocks.module';
 import { BookingsModule } from './modules/bookings/bookings.module';
-import { PolciiesModule } from './modules/polciies/polciies.module';
+import { PoliciesModule } from './modules/policies/policies.module';
+import { AccountsModule } from './modules/accounts/accounts.module';
+import { PublicBookingModule } from './modules/public-booking/public-booking.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -16,7 +18,9 @@ import { PolciiesModule } from './modules/polciies/polciies.module';
     AvailabilityModule,
     BlocksModule,
     BookingsModule,
-    PolciiesModule,
+    PoliciesModule,
+    AccountsModule,
+    PublicBookingModule
   ],
   controllers: [AppController],
   providers: [AppService],

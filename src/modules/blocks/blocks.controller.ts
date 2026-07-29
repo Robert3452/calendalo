@@ -1,18 +1,16 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
+  Get,
+  Param,
+  Post,
   UseGuards,
 } from '@nestjs/common';
+import { AccountId } from 'src/common/decorators/account-id.decorator';
+import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { BlocksService } from './blocks.service';
 import { CreateBlockDto } from './dto/create-block.dto';
-import { UpdateBlockDto } from './dto/update-block.dto';
-import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
-import { AccountId } from 'src/common/decorators/account-id.decorator';
 
 @Controller('blocks')
 @UseGuards(JwtAuthGuard)
@@ -33,7 +31,7 @@ export class BlocksController {
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.blocksService.remove();
+  remove(@AccountId() accountId: string, @Param('id') id: string) {
+    return this.blocksService.remove(accountId, id);
   }
 }

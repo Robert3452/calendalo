@@ -1,4 +1,4 @@
 import { PartialType } from '@nestjs/mapped-types';
-import { UpsertPolciyDto } from './create-polciy.dto';
+import { UpsertPolciyDto } from './create-policy.dto';
 
 export class UpdatePolciyDto extends PartialType(UpsertPolciyDto) {}

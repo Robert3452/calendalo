@@ -1,14 +1,14 @@
 import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
-import { UpsertPolciyDto } from './dto/create-polciy.dto';
-import { PolciiesService } from './polciies.service';
+import { UpsertPolciyDto } from './dto/create-policy.dto';
+import { PoliciesService } from './policies.service';
 
 import { AccountId } from 'src/common/decorators/account-id.decorator';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 
-@Controller('polciies')
+@Controller('policies')
 @UseGuards(JwtAuthGuard)
-export class PolciiesController {
-  constructor(private readonly polciiesService: PolciiesService) {}
+export class PoliciesController {
+  constructor(private readonly polciiesService: PoliciesService) {}
 
   @Post()
   upsert(

@@ -4,6 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { BookingWhereInput } from 'generated/prisma/models';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
 
@@ -141,7 +142,23 @@ export class BookingsService {
     if (!found) throw new NotFoundException('Booking not found');
     return found;
   }
+  async findAll(accountId: string, from?: string, to?: string) {
+    const where: BookingWhereInput = {
+      accountId,
+    };
 
+    if (from && to) {
+      where.startTime = { gte: new Date(from) };
+      where.endTime = { lte: new Date(to) };
+    }
+    const bookings = await this.prismaService.booking.findMany({
+      where,
+      orderBy: {
+        startTime: 'asc',
+      },
+    });
+    return bookings;
+  }
   async cancel(accountId: string, id: string) {
     const booking = await this.findOne(accountId, id);
     if (booking.status === 'cancelled')
