@@ -57,7 +57,7 @@ model User {
 
 model Policy {
   id               String @id @default(uuid())
-  minNoticeHours   Int    @default(5)
+  minNoticeHours   Int    @default(5) // min notice hours, the minimum anticipation for make a reservation
   cancelLimitHours Int    @default(24)
   slotDurationMin  Int    @default(30)
 
