@@ -20,4 +20,7 @@ export class AccountsService {
       data: dto,
     });
   }
+  async getAll() {
+    return this.prisma.account.findMany();
+  }
 }

@@ -20,7 +20,7 @@ import { PublicBookingModule } from './modules/public-booking/public-booking.mod
     BookingsModule,
     PoliciesModule,
     AccountsModule,
-    PublicBookingModule
+    PublicBookingModule,
   ],
   controllers: [AppController],
   providers: [AppService],
