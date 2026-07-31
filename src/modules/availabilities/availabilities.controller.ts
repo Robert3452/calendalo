@@ -1,10 +1,10 @@
-import { Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 import { AvailabilityService } from './availabilities.service';
 import { AccountId } from 'src/common/decorators/account-id.decorator';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { UpsertAvailabilityDto } from './dto/upsert-availabiliy.dto';
 
-@Controller()
+@Controller('availabilities')
 @UseGuards(JwtAuthGuard)
 export class AvailabilityController {
   constructor(private readonly availabilityService: AvailabilityService) {}
@@ -18,7 +18,7 @@ export class AvailabilityController {
   @Post('upsert')
   async upsertAvailability(
     @AccountId() accountId: string,
-    dto: UpsertAvailabilityDto,
+    @Body() dto: UpsertAvailabilityDto,
   ) {
     return this.availabilityService.upsertAvailability(accountId, dto);
   }

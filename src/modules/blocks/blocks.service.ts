@@ -10,20 +10,34 @@ export class BlocksService {
   async create(accountId: string, createBlockDto: CreateBlockDto) {
     const { endTime, startTime } = createBlockDto;
 
+    const now = new Date();
     const startTimeDate = new Date(startTime);
     const endTimeDate = new Date(endTime);
+    if (now >= startTimeDate)
+      throw new BadRequestException(
+        'You cannot create a block less than the current Date',
+      );
     if (startTimeDate >= endTimeDate)
       throw new BadRequestException('Start time must be before endtime');
 
     const newBlock = await this.prisma.$transaction(async (tx) => {
-      const where = this.buildOverlapWhere(accountId, startTime, endTime);
+      const where = this.buildOverlapWhere(
+        accountId,
+        startTimeDate,
+        endTimeDate,
+      );
       const overlaps = await tx.block.findFirst({ where });
       if (overlaps)
         throw new BadRequestException(
           'Block already exists or is overlaping a previous Block',
         );
       const newBlock = await tx.block.create({
-        data: { ...createBlockDto, accountId },
+        data: {
+          ...createBlockDto,
+          startTime: startTimeDate,
+          endTime: endTimeDate,
+          accountId,
+        },
       });
       return newBlock;
     });
@@ -31,8 +45,8 @@ export class BlocksService {
   }
   private buildOverlapWhere(
     accountId: string,
-    startTime: string,
-    endTime: string,
+    startTime: Date,
+    endTime: Date,
   ): BlockWhereInput {
     return {
       accountId,
