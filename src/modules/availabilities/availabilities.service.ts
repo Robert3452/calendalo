@@ -13,7 +13,6 @@ export class AvailabilityService {
     });
     return availabilities;
   }
-
   async upsertAvailability(accountId: string, dto: UpsertAvailabilityDto) {
     await this.prisma.$transaction([
       this.prisma.availability.deleteMany({ where: { accountId } }),

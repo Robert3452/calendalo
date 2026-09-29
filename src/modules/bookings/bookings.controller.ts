@@ -8,15 +8,30 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
+import { AiService } from 'src/ai/ai.service';
 import { AccountId } from 'src/common/decorators/account-id.decorator';
+import { Public } from 'src/common/decorators/public.decorator';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
-import { BookingsService } from './bookings.service';
+import { BookingsService, IResponseAvailability } from './bookings.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
+import { ChatDto, ChatMessageDto } from './dto/chat.dto';
 
 @Controller('bookings')
 @UseGuards(JwtAuthGuard)
 export class BookingsController {
-  constructor(private readonly bookingsService: BookingsService) {}
+  constructor(
+    private readonly bookingsService: BookingsService,
+    private readonly ai: AiService,
+  ) {}
+
+  @Public()
+  @Post('chat')
+  async chat(
+    @Body()
+    body: ChatDto,
+  ) {
+    return this.ai.sendMessage(body.message, body.accountId, body.history);
+  }
 
   @Post()
   create(
@@ -24,6 +39,14 @@ export class BookingsController {
     @Body() createBookingDto: CreateBookingDto,
   ) {
     return this.bookingsService.create(accountId, createBookingDto);
+  }
+  @Public()
+  @Get('aiAvailability')
+  aiAvailability(): Promise<IResponseAvailability[]> {
+    return this.bookingsService.checkAiAvailability(
+      'fa20e4b8-18e5-4ad2-b173-8f831ac3b126',
+      '2026-09-14',
+    );
   }
 
   @Get()

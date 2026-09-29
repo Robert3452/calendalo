@@ -10,6 +10,8 @@ import { BookingsModule } from './modules/bookings/bookings.module';
 import { PoliciesModule } from './modules/policies/policies.module';
 import { AccountsModule } from './modules/accounts/accounts.module';
 import { PublicBookingModule } from './modules/public-booking/public-booking.module';
+import { ChatwootModule } from './modules/chatwoot/chatwoot.module';
+import { ChatwootApiService } from './modules/chatwoot/chatwoot-api.service';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -21,8 +23,9 @@ import { PublicBookingModule } from './modules/public-booking/public-booking.mod
     PoliciesModule,
     AccountsModule,
     PublicBookingModule,
+    ChatwootModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, ChatwootApiService],
 })
 export class AppModule {}
