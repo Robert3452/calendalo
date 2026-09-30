@@ -8,7 +8,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { AiService } from 'src/ai/ai.service';
+import { AiService } from 'src/modules/ai/ai.service';
 import { AccountId } from 'src/common/decorators/account-id.decorator';
 import { Public } from 'src/common/decorators/public.decorator';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';

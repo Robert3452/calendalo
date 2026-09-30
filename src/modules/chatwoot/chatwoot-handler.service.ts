@@ -1,6 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ChatwootApiService } from './chatwoot-api.service';
 import { ChatwootWebhookPayload, IncomingMessage } from './chatwoot.types';
+import { AiService } from 'src/modules/ai/ai.service';
+import { ConversationStore } from '../redis/conversationStore';
+import { ChatMessageDto } from '../bookings/dto/chat.dto';
 const LABEL_APPROVE = 'enviar-horarios';
 
 @Injectable()
@@ -10,7 +13,11 @@ export class ChatwootHandlerService {
   /** Anti-duplicados en memoria. Reemplazar por tabla processed_events. */
   private readonly seen = new Set<string>();
 
-  constructor(private readonly api: ChatwootApiService) {}
+  constructor(
+    private readonly api: ChatwootApiService,
+    private readonly llm: AiService,
+    private readonly history: ConversationStore,
+  ) {}
 
   async dispatch(p: ChatwootWebhookPayload): Promise<void> {
     switch (p.event) {
@@ -46,48 +53,59 @@ export class ChatwootHandlerService {
     await this.onFreeText(msg);
   }
 
-  /** Aquí entra tu motor de disponibilidad y el LLM. */
   private async onFreeText(msg: IncomingMessage): Promise<void> {
     this.log.log(`Mensaje de ${msg.phone}: ${msg.content}`);
 
-    // 1. Clasificar intención con tu LLM.
-    //    Si NO es sobre agenda -> handoff inmediato, el bot no improvisa.
-    // const intent = await this.llm.classify(msg.content);
-    // if (intent !== 'booking') {
-    //   await this.api.sendPrivateNote(msg.accountId, msg.conversationId,
-    //     'Mensaje fuera del tema de agenda. Te lo paso.');
-    //   await this.api.handoff(msg.accountId, msg.conversationId);
-    //   return;
-    // }
+    const intent = await this.llm.classify(msg.content);
 
-    // 2. Tu motor actual: horarios fijos, blockers, policies, asistencias.
-    // const slots = await this.scheduling.getAvailability(accountId, msg.patientType);
+    if (!['agendar', 'confirmar', 'mixto'].includes(intent)) {
+      await this.api.sendPrivateNote(
+        msg.accountId,
+        msg.conversationId,
+        `Mensaje fuera del tema de agenda (${intent}). Te lo paso.`,
+      );
+      await this.api.handoff(msg.accountId, msg.conversationId);
+      return;
+    }
 
-    // 3. Cruzar con freebusy de Google Calendar.
-    // const busy = await this.calendar.getBusy(...);
+    const accountId = 'fa20e4b8-18e5-4ad2-b173-8f831ac3b126';
 
-    // 4. Crear held_slots con TTL y token opaco.
-    // const items = held.map(h => ({ title: formatLima(h.startsAt), value: h.token }));
+    const history = await this.history.get(msg.accountId, msg.conversationId);
 
-    const items = [
-      { title: 'Lun 4:00 pm', value: 'hs_demo_001' },
-      { title: 'Mié 6:00 pm', value: 'hs_demo_002' },
-      { title: 'Vie 10:00 am', value: 'hs_demo_003' },
-    ];
+    const {
+      reply,
+      history: updated,
+      slots,
+    } = await this.llm.sendMessage(msg.content, accountId, history, {
+      toolNames: ['check_availability'],
+    });
 
-    // 5. Propuesta como NOTA PRIVADA. El paciente todavía no ve nada.
+    await this.history.set(
+      msg.accountId,
+      msg.conversationId,
+      updated.map((el) => ({ ...el }) as ChatMessageDto),
+    );
+
+    if (!slots.length) {
+      await this.api.sendText(msg.accountId, msg.conversationId, reply);
+      return;
+    }
+
+    const items = slots.slice(0, 10).map((s) => ({
+      title: s.label,
+      value: s.slotStart,
+    }));
+
     const preview = items.map((i) => `• ${i.title}`).join('\n');
+
     await this.api.sendPrivateNote(
       msg.accountId,
       msg.conversationId,
-      `Propuesta lista con ${items.length} horarios:\n${preview}\n\n` +
+      `${reply}\n\nHorarios propuestos:\n${preview}\n\n` +
         `Aplica la etiqueta "${LABEL_APPROVE}" para enviarla al paciente.`,
     );
-
-    // Guarda la propuesta en estado PENDING_APPROVAL con conversationId.
-    // await this.proposals.create({ conversationId: msg.conversationId, items });
+    await this.history.setProposal(msg.accountId, msg.conversationId, items);
   }
-
   /** El paciente eligió un horario. */
   private async onSlotSelected(msg: IncomingMessage): Promise<void> {
     this.log.log(`Slot elegido: ${msg.selectedValue}`);
@@ -135,12 +153,15 @@ export class ChatwootHandlerService {
     // const proposal = await this.proposals.findPending(conversationId);
     // if (!proposal) return;
 
-    const items = [
-      { title: 'Lun 4:00 pm', value: 'hs_demo_001' },
-      { title: 'Mié 6:00 pm', value: 'hs_demo_002' },
-      { title: 'Vie 10:00 am', value: 'hs_demo_003' },
-    ];
-
+    const items = await this.history.getProposal(accountId, conversationId);
+    if (!items?.length) {
+      await this.api.sendPrivateNote(
+        accountId,
+        conversationId,
+        'No hay propuesta vigente. Pídele al paciente que escriba de nuevo.',
+      );
+      return;
+    }
     await this.api.sendSelect(
       accountId,
       conversationId,

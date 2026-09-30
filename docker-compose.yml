@@ -12,5 +12,15 @@ services:
       - '5433:5432'
     volumes:
       - calendalo_postgres_data:/var/lib/postgresql/data
+  redis:
+    image: redis:7-alpine
+    container_name: calendalo-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    ports:
+      - '6380:6379'
+    volumes:
+      - calendalo_redis_data:/data
 volumes:
   calendalo_postgres_data:
+  calendalo_redis_data:

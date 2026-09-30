@@ -1,12 +1,13 @@
-import { Module } from '@nestjs/common';
-import { BookingsService } from './bookings.service';
+import { forwardRef, Module } from '@nestjs/common';
+import { AiModule } from '../ai/ai.module';
 import { BookingsController } from './bookings.controller';
-import { AiService } from 'src/ai/ai.service';
-import { ToolExecutorService } from 'src/ai/tool-executor.service';
-
+import { BookingsService } from './bookings.service';
+import { ToolExecutorService } from '../ai/tool-executor.service';
+// bookings.module.ts
 @Module({
+  imports: [forwardRef(() => AiModule)],
   controllers: [BookingsController],
-  providers: [BookingsService, AiService, ToolExecutorService],
-  exports: [BookingsService],
+  providers: [BookingsService, ToolExecutorService],
+  exports: [BookingsService, ToolExecutorService],
 })
 export class BookingsModule {}

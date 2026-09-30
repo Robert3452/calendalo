@@ -12,6 +12,9 @@ import { AccountsModule } from './modules/accounts/accounts.module';
 import { PublicBookingModule } from './modules/public-booking/public-booking.module';
 import { ChatwootModule } from './modules/chatwoot/chatwoot.module';
 import { ChatwootApiService } from './modules/chatwoot/chatwoot-api.service';
+import { AiModule } from './modules/ai/ai.module';
+import { RedisModule } from './modules/redis/redis.module';
+import { ConversationStore } from './modules/redis/conversationStore';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -24,8 +27,12 @@ import { ChatwootApiService } from './modules/chatwoot/chatwoot-api.service';
     AccountsModule,
     PublicBookingModule,
     ChatwootModule,
+
+    AiModule,
+
+    RedisModule,
   ],
   controllers: [AppController],
-  providers: [AppService, ChatwootApiService],
+  providers: [AppService, ChatwootApiService, ConversationStore],
 })
 export class AppModule {}
